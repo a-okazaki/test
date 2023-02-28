@@ -1,0 +1,228 @@
+#
+# zlib
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote
+
+#
+# openssl
+#
+
+# i386
+--- Configure.orig      2012-03-03 22:18:06.000000000 +0900
++++ Configure   2012-04-09 20:41:55.000000000 +0900
+@@ -1411,7 +1411,8 @@
+                # Eliminate unnecessary dependency from libirc.a. This is
+                # essential for shared library support, as otherwise
+                # apps/openssl can end up in endless loop upon startup...
+-               $cflags.=" -Dmemcpy=__builtin_memcpy -Dmemset=__builtin_memset";
++               $cflags=~s/\-O2/-O3/;
++               $cflags.=" -xWNP -axWNP -ip -unroll4 -mp -Dmemcpy=__builtin_memcpy -Dmemset=__builtin_memset";
+                }
+        if ($iccver>=9)
+                {
+@@ -1420,7 +1421,16 @@
+                }
+        if ($iccver>=10)
+                {
++               $cflags=~s/\-KPIC/-fPIC/;
+                $cflags=~s/\-i\-static/-static-intel/;
++               $cflags=~s/\-no\-cpprt/-no-cxxlib/;
++               }
++       if ($iccver>=11)
++               {
++               $cflags=~s/\-xWNP/-xSSSE3/;
++               $cflags=~s/\-axWNP/-axSSSE3/;
++               $cflags=~s/\-mp/-fp-model precise/;
++               $cflags.=" -restrict";
+                }
+        }
+
+./Configure --prefix=/usr/local/nekonote/ssl --openssldir=/usr/local/nekonote/ssl --with-zlib-include=/usr/local/nekonote/include --with-zlib-lib=/usr/local/nekonote/lib shared linux-ia32-icc
+
+# x86_64
+--- Configure.orig      2012-03-15 07:20:40.000000000 +0900
++++ Configure   2012-09-25 19:14:00.000000000 +0900
+@@ -350,7 +350,7 @@
+ "linux-armv4", "gcc:-DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${armv4_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ #### IA-32 targets...
+ "linux-ia32-icc",      "icc:-DL_ENDIAN -DTERMIO -O2 -no_cpprt::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-KPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+-"linux-elf",   "gcc:-DL_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
++"linux-elf",   "gcc:-DL_ENDIAN -DTERMIO -O3 -mcpu=core2 -march=core2 -mtune=core2 -fomit-frame-pointer -finline-functions -fstrength-reduce -funroll-loops -fexpensive-optimizations -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ "linux-aout",  "gcc:-DL_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -march=i486 -Wall::(unknown):::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_asm}:a.out",
+ ####
+ "linux-generic64","gcc:-DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+@@ -358,7 +358,7 @@
+ "linux-ia64",  "gcc:-DL_ENDIAN -DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_UNROLL DES_INT:${ia64_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ "linux-ia64-ecc","ecc:-DL_ENDIAN -DTERMIO -O2 -Wall -no_cpprt::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT:${ia64_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ "linux-ia64-icc","icc:-DL_ENDIAN -DTERMIO -O2 -Wall -no_cpprt::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_RISC1 DES_INT:${ia64_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+-"linux-x86_64",        "gcc:-m64 -DL_ENDIAN -DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT DES_UNROLL:${x86_64_asm}:elf:dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR):::64",
++"linux-x86_64",        "gcc:-m64 -DL_ENDIAN -DTERMIO -O3 -mcpu=core2 -march=core2 -mtune=core2 -fomit-frame-pointer -finline-functions -fstrength-reduce -funroll-loops -fexpensive-optimizations -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT DES_UNROLL:${x86_64_asm}:elf:dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR):::64",
+ "linux64-s390x",       "gcc:-m64 -DB_ENDIAN -DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL:${s390x_asm}:64:dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR):::64",
+ #### So called "highgprs" target for z/Architecture CPUs
+ # "Highgprs" is kernel feature first implemented in Linux 2.6.32, see
+
+./Configure --prefix=/usr/local/nekonote/ssl --openssldir=/usr/local/nekonote/ssl --with-zlib-include=/usr/local/nekonote/include --with-zlib-lib=/usr/local/nekonote/lib shared linux-x86_64
+
+#
+# net-snmp
+#
+./configure --prefix=/usr/local/nekonote/net-snmp --with-openssl=/usr/local/nekonote/ssl --with-zlib=/usr/local/nekonote --disable-embedded-perl --without-perl-modules --with-cc="icc -static-intel -static-libgcc" --with-cflags="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" --with-ar="xiar"
+
+#
+# proftpd
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict -no-icc" AR=xiar install_user=admin install_group=admin ./configure --prefix=/usr/local/nekonote/proftpd --with-modules=mod_tls --with-includes=/usr/local/nekonote/ssl/include --with-libraries=/usr/local/nekonote/ssl/lib
+
+#
+# expat
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote
+
+#
+# libxml2
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote --with-zlib=/usr/local/nekonote
+
+#
+# mhash
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote
+
+#
+# libmcrypt
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote --enable-static
+
+#
+# curl
+#
+CC="icc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote --with-ssl=/usr/local/nekonote/ssl --with-zlib=/usr/local/nekonote
+
+#
+# libpng
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote
+
+#
+# jpeg
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote
+
+#
+# freetype
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote
+
+#
+# gd
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote --with-png=/usr/local/nekonote --with-freetype=/usr/local/nekonote --with-jpeg=/usr/local/nekonote
+
+#
+# libart_lgpl
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote
+
+#
+# apache
+#
+# prefork
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar LDFLAGS="-L/usr/local/nekonote/lib" ./configure --prefix=/usr/local/nekonote/apache2 --with-included-apr --with-mpm=prefork --disable-actions --disable-asis --enable-auth-digest --disable-charset-lite --disable-filter --disable-imagemap --disable-include --enable-logio --disable-negotiation --enable-rewrite --enable-so --enable-unique-id --disable-userdir
+
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar LDFLAGS="-L/usr/local/nekonote/lib" ./configure --prefix=/usr/local/nekonote/apache2 --with-included-apr --with-mpm=prefork --disable-actions --disable-asis --enable-auth-digest --disable-charset-lite --disable-filter --disable-imagemap --disable-include --enable-logio --disable-negotiation --enable-rewrite --enable-so --enable-unique-id --disable-userdir --enable-ssl --with-ssl=/usr/local/nekonote/ssl
+
+# worker
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar LDFLAGS="-L/usr/local/nekonote/lib" ./configure --prefix=/usr/local/nekonote/apache2 --with-included-apr --with-mpm=worker --disable-actions --disable-asis --enable-auth-digest --disable-charset-lite --disable-filter --disable-imagemap --disable-include --enable-logio --disable-negotiation --enable-rewrite --enable-so --enable-unique-id --disable-userdir
+
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar LDFLAGS="-L/usr/local/nekonote/lib" ./configure --prefix=/usr/local/nekonote/apache2 --with-included-apr --with-mpm=worker --disable-actions --disable-asis --enable-auth-digest --disable-charset-lite --disable-filter --disable-imagemap --disable-include --enable-logio --disable-negotiation --enable-rewrite --enable-so --enable-unique-id --disable-userdir --enable-ssl --with-ssl=/usr/local/nekonote/ssl
+
+#
+# jsvc
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ip -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote/java/tomcat
+
+#
+# tomcat connector
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --with-apxs=/usr/local/nekonote/apache2/bin/apxs
+
+#
+# php
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote/php --with-apxs2=/usr/local/nekonote/apache2/bin/apxs --disable-short-tags --with-zlib --with-curl=/usr/local/nekonote --enable-mbstring --with-mcrypt=/usr/local/nekonote --with-mhash=/usr/local/nekonote --with-mysql=/usr/local/nekonote/mysql --with-mysqli=/usr/local/nekonote/mysql/bin/mysql_config --with-pdo-mysql=/usr/local/nekonote/mysql --with-snmp=/usr/local/nekonote/net-snmp --without-sqlite --without-pdo-sqlite --with-libxml-dir=/usr/local/nekonote --with-libexpat-dir=/usr/local/nekonote --without-pear --enable-zend-multibyte
+
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote/php --with-apxs2=/usr/local/nekonote/apache2/bin/apxs --disable-short-tags --with-zlib --with-curl=/usr/local/nekonote --with-gd --with-jpeg-dir=/usr/local/nekonote --with-png-dir=/usr/local/nekonote --with-freetype-dir=/usr/local/nekonote --enable-mbstring --with-mcrypt=/usr/local/nekonote --with-mhash=/usr/local/nekonote --with-mysql=/usr/local/nekonote/mysql --with-mysqli=/usr/local/nekonote/mysql/bin/mysql_config --with-pdo-mysql=/usr/local/nekonote/mysql --with-snmp=/usr/local/nekonote/net-snmp --enable-sockets --without-sqlite --without-pdo-sqlite --with-libxml-dir=/usr/local/nekonote --with-libexpat-dir=/usr/local/nekonote --without-pear --enable-zend-multibyte
+
+#
+# eaccelerator
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" AR=xiar ./configure --enable-eaccelerator --with-php-config=/usr/local/nekonote/php/bin/php-config --with-eaccelerator-disassembler
+
+#
+# perl modules
+#
+
+# crypt-des
+LANG=C perl Makefile.PL PREFIX=/usr/local/nekonote CC="icc -static-intel -static-libgcc" CCFLAGS="-ipo -unroll4 -fp-model precise -restrict" LD="icc -static-intel -static-libgcc"
+
+# net-snmp
+LANG=C perl Makefile.PL PREFIX=/usr/local/nekonote
+
+# dbi module
+LANG=C perl Makefile.PL PREFIX=/usr/local/nekonote CC="icc -static-intel -static-libgcc" CCFLAGS="-ipo -unroll4 -fp-model precise -restrict" LD="icc -static-intel -static-libgcc"
+
+# dbd-mysql module
+LANG=C perl Makefile.PL PREFIX=/usr/local/nekonote CC="icc -static-intel -static-libgcc" CCFLAGS="-ipo -unroll4 -fp-model precise -restrict" LD="icc -static-intel -static-libgcc"
+
+# dbd-pg module
+LANG=C perl Makefile.PL PREFIX=/usr/local/nekonote CC="icc -static-intel -static-libgcc" LD="icc -static-intel -static-libgcc"
+
+#
+# nagios
+#
+--- html/Makefile.in.orig       2011-07-25 02:53:52.000000000 +0900
++++ html/Makefile.in    2012-04-10 20:50:55.000000000 +0900
+@@ -75,9 +75,9 @@
+        do $(INSTALL) -m 664 $(INSTALL_OPTS) $$file $(DESTDIR)$(HTMLDIR)/images/logos; done
+        for file in includes/*.*; \
+        do $(INSTALL) -m 664 $(INSTALL_OPTS) $$file $(DESTDIR)$(HTMLDIR)/includes; done
+-       for file in includes/rss/*; \
++       for file in includes/rss/*.*; \
+        do $(INSTALL) -m 664 $(INSTALL_OPTS) $$file $(DESTDIR)$(HTMLDIR)/includes/rss; done
+-       for file in includes/rss/extlib/*; \
++       for file in includes/rss/extlib/*.*; \
+        do $(INSTALL) -m 664 $(INSTALL_OPTS) $$file $(DESTDIR)$(HTMLDIR)/includes/rss/extlib; done
+ 
+ install-unstripped:
+
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ip -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote/nagios --with-cgiurl=/nagios/cgi-bin --with-htmlurl=/nagios --with-nagios-group=nagios --with-command-group=nagcmd --with-gd-lib=/usr/local/nekonote/lib --with-gd-inc=/usr/local/nekonote/include
+
+#
+# nrpe
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ip -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote/nagios --enable-command-args --with-ssl=/usr/local/nekonote/ssl
+
+#
+# ndoutils
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ip -unroll4 -fp-model precise -restrict -I/usr/local/nekonote/mysql/include" AR=xiar ./configure --prefix=/usr/local/nekonote/nagios --with-mysql=/usr/local/nekonote/mysql
+
+#
+# nagios-plugins
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ip -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote/nagios --with-openssl=/usr/local/nekonote/ssl --with-pgsql=/usr/local/nekonote/pgsql --with-mysql=/usr/local/nekonote/mysql --with-snmpget-command=/usr/local/nekonote/net-snmp/bin/snmpget --with-snmpgetnext-command=/usr/local/nekonote/net-snmp/bin/snmpgetnext
+
+#
+# rrdtool
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" CPPFLAGS="-I/usr/local/nekonote/include/libart-2.0 -I/usr/local/nekonote/include/freetype2 -I/usr/local/nekonote/include/libpng12 -I/usr/local/nekonote/include/libxml2 -I/usr/local/nekonote/include" AR=xiar LDFLAGS="-L/usr/local/nekonote/lib" PERLCC="icc -static-intel -static-libgcc" PERLCCFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict" PERLLD="icc -static-intel -static-libgcc" ./configure --prefix=/usr/local/nekonote/rrdtool --enable-static-programs
+
+#
+# pnp4nagios
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ip -unroll4 -fp-model precise -restrict" AR=xiar ./configure --prefix=/usr/local/nekonote/pnp4nagios --with-rrdtool=/usr/local/nekonote/rrdtool/bin/rrdtool --with-perl_lib_path=/usr/local/nekonote/rrdtool/lib/perl
+
+#
+# cacti-spine
+#
+CC="icc -static-intel -static-libgcc" CFLAGS="-O3 -xSSSE3 -axSSSE3 -ipo -unroll4 -fp-model precise -restrict -no-icc" AR=xiar ./configure --prefix=/usr/local/nekonote/spine --with-mysql=/usr/local/nekonote/mysql --with-snmp=/usr/local/nekonote/net-snmp
